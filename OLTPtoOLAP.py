@@ -6,6 +6,10 @@ from sqlalchemy import create_engine
 from Constants import CONNECTION_URL, SRC_SCHEMA, TGT_SCHEMA
 from Mapper import oltp_to_olap_mapping
 
+# TODO: Logging and Error Handling
+# TODO: Consider using a configuration file for the connection strings
+# TODO: Consider using SqlAlchemy's ORM based Tables
+
 # Create a connection to the OLTP database
 engine = create_engine(CONNECTION_URL)
 
@@ -18,9 +22,13 @@ with engine.connect() as conn:
     One to one mapping of columns from OLTP to OLAP
     ''' 
     oltp_to_olap_mapping(
-        'Products', 
-        'Product_dim', 
+        'Products',
+        'Product_Dim', 
         {'ProductID': 'ProductID', 'ProductName': 'ProductName', 'UnitPrice': 'UnitPrice', 'Discontinued': 'Discontinued'},
         conn
     )
+
+    '''
+    OLTP: Suppliers()
+    '''
 
