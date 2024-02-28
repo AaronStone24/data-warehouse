@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 
-from Constants import CONNECTION_URL, SRC_SCHEMA, TGT_SCHEMA, logger
+from Constants import CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, logger
 from Mapper import oltp_to_olap_mapping, customerEmployee_Fact_mapper, productInStock_Fact_mapper
 
 # TODO: Error Handling

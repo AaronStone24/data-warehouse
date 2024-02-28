@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from Constants import SRC_SCHEMA, TGT_SCHEMA, logger
+from Constants import OLTP_SCHEMA, LND_SCHEMA, logger
 
 '''
     Function to map the OLTP tables to OLAP tables
@@ -15,9 +15,9 @@ def oltp_to_olap_mapping(oltp_table_name, olap_table_name, mapping: dict, conn):
         logger.info(f'Starting mapping of {oltp_table_name} to {olap_table_name}.')
         oltp_columns, olap_columns = list(mapping.keys()), list(mapping.values())
 
-        sql_query = f'SELECT {','.join(oltp_columns)} FROM {SRC_SCHEMA}.{oltp_table_name}'
+        sql_query = f'SELECT {','.join(oltp_columns)} FROM {OLTP_SCHEMA}.{oltp_table_name}'
         if olap_table_name == 'Calendar_Dim':
-            sql_query = f'SELECT DISTINCT {oltp_columns[0]} FROM {SRC_SCHEMA}.{oltp_table_name}'
+            sql_query = f'SELECT DISTINCT {oltp_columns[0]} FROM {OLTP_SCHEMA}.{oltp_table_name}'
         logger.info(f'Executing the query to select data from oltp table: {sql_query}')
         
         oltp_df = pd.read_sql_query(sql_query, conn)
@@ -43,7 +43,7 @@ def oltp_to_olap_mapping(oltp_table_name, olap_table_name, mapping: dict, conn):
             logger.info(f'Added the extra columns to the dataframe for Calendar_Dim dimension table.')
 
         # Add the SourceTable column to the DataFrame
-        oltp_df['SourceTable'] = f'{SRC_SCHEMA}.{oltp_table_name}'
+        oltp_df['SourceTable'] = f'{OLTP_SCHEMA}.{oltp_table_name}'
         logger.info(f'Added the SourceTable column to the DataFrame.')
 
         # Add the loadTimeDate column to the DataFrame
@@ -51,7 +51,7 @@ def oltp_to_olap_mapping(oltp_table_name, olap_table_name, mapping: dict, conn):
         logger.info(f'Added the loadTimeDate column to the DataFrame.')
 
         # Write the data to the OLAP database
-        oltp_df.to_sql(olap_table_name, conn, schema=TGT_SCHEMA, if_exists='fail', index=False)
+        oltp_df.to_sql(olap_table_name, conn, schema=LND_SCHEMA, if_exists='fail', index=False)
         logger.info(f'Written the data to the {olap_table_name} OLAP database.')
 
         conn.commit()
@@ -73,7 +73,7 @@ def customerEmployee_Fact_mapper(conn):
             ON OD.OrderDate = CLD.FullDate
             JOIN {0}.[Order Details] ODT
             ON OD.OrderID = ODT.OrderID
-            GROUP BY CustomerKey, EmployeeKey, CalendarKey, OD.OrderID'''.format(SRC_SCHEMA, TGT_SCHEMA)
+            GROUP BY CustomerKey, EmployeeKey, CalendarKey, OD.OrderID'''.format(OLTP_SCHEMA, LND_SCHEMA)
         logger.info(f'Executing the query to select data from oltp tables: {sql_query}')
         
         df = pd.read_sql_query(sql_query, conn)
@@ -85,7 +85,7 @@ def customerEmployee_Fact_mapper(conn):
         logger.info(f'Replaced the missing values with NaN in the dataframe.')
 
         # Add the SourceTable column to the DataFrame
-        df['SourceTable'] = f'{SRC_SCHEMA}.Orders, {SRC_SCHEMA}.OrderDetails'
+        df['SourceTable'] = f'{OLTP_SCHEMA}.Orders, {OLTP_SCHEMA}.OrderDetails'
         logger.info(f'Added the SourceTable column to the DataFrame.')
 
         # Add the loadTimeDate column to the DataFrame
@@ -93,7 +93,7 @@ def customerEmployee_Fact_mapper(conn):
         logger.info(f'Added the loadTimeDate column to the DataFrame.')
 
         # Write the data to the OLAP database
-        df.to_sql('CustomerEmployee_Fact', conn, schema=TGT_SCHEMA, if_exists='fail', index=False)
+        df.to_sql('CustomerEmployee_Fact', conn, schema=LND_SCHEMA, if_exists='fail', index=False)
         logger.info(f'Written the data to the CustomerEmployee_Fact OLAP database.')
         
         conn.commit()
@@ -113,7 +113,7 @@ def productInStock_Fact_mapper(conn):
         JOIN {1}.Calendar_Dim CLD ON OD.OrderDate = CLD.FullDate
         JOIN {1}.Product_Dim PD ON ODT.ProductID = PD.ProductID
         JOIN {1}.Categories_Dim CD ON PDT.CategoryID = CD.CategoryID
-        JOIN {1}.Supplier_Dim SD ON PDT.SupplierID = SD.SupplierID'''.format(SRC_SCHEMA, TGT_SCHEMA)
+        JOIN {1}.Supplier_Dim SD ON PDT.SupplierID = SD.SupplierID'''.format(OLTP_SCHEMA, LND_SCHEMA)
         logger.info(f'Executing the query to select data from oltp tables: {sql_query}')
 
         df = pd.read_sql_query(sql_query, conn)
@@ -125,7 +125,7 @@ def productInStock_Fact_mapper(conn):
         logger.info(f'Replaced the missing values with NaN in the dataframe.')
 
         # Add the SourceTable column to the DataFrame
-        df['SourceTable'] = f'{SRC_SCHEMA}.Orders, {SRC_SCHEMA}.OrderDetails, {SRC_SCHEMA}.Products'
+        df['SourceTable'] = f'{OLTP_SCHEMA}.Orders, {OLTP_SCHEMA}.OrderDetails, {OLTP_SCHEMA}.Products'
         logger.info(f'Added the SourceTable column to the DataFrame.')
 
         # Add the loadTimeDate column to the DataFrame
@@ -133,7 +133,7 @@ def productInStock_Fact_mapper(conn):
         logger.info(f'Added the loadTimeDate column to the DataFrame.')
 
         # Write the data to the OLAP database
-        df.to_sql('ProductInStock_Fact', conn, schema=TGT_SCHEMA, if_exists='fail', index=False)
+        df.to_sql('ProductInStock_Fact', conn, schema=LND_SCHEMA, if_exists='fail', index=False)
         logger.info(f'Written the data to the ProductInStock_Fact OLAP database.')
 
         conn.commit()
