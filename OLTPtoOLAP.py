@@ -1,6 +1,3 @@
-import pandas as pd
-import numpy as np
-import pyodbc as odbc
 from sqlalchemy import create_engine
 
 from Constants import CONNECTION_URL, SRC_SCHEMA, TGT_SCHEMA, logger
@@ -8,15 +5,11 @@ from Mapper import oltp_to_olap_mapping, customerEmployee_Fact_mapper, productIn
 
 # TODO: Error Handling
 # TODO: Consider using a configuration file for the connection strings
-# TODO: Consider using SqlAlchemy's ORM based Tables
+# TODO: Consider using SqlAlchemy's ORM based Tables 
 
-# Create a connection to the OLTP database
-engine = create_engine(CONNECTION_URL)
-logger.info('Created engine to connect to the OLTP database.')
-
-# Read the data from the OLTP database by obtaining the connection
-with engine.connect() as conn:
-    logger.info('Connected to the OLTP database.')
+def load_dimension_tables(conn):
+    # Load the dimension tables
+    logger.info('Loading the dimension tables.')
 
     # Mapping the OLTP tables to OLAP tables
     logger.info('Starting mapping of OLTP tables to OLAP tables.')
@@ -93,7 +86,11 @@ with engine.connect() as conn:
         conn
     )
     logger.info('Mapped Employees to Employee_Dim.')
-    
+
+def load_fact_tables(conn):
+    # Load the fact tables
+    logger.info('Loading the fact tables.')
+
     '''
     OLTP: Orders(OrderID), OrderDetails(OrderID, UnitPrice, Quantity, Discount)
     OLAP: CustomerEmployee_Fact(CustomerKey, EmployeeKey, CalendarKey, OrderID, Sales, loadTimeDate, SourceTable)

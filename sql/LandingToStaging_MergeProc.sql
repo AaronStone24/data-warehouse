@@ -50,16 +50,10 @@ BEGIN
 	END
 
 	SET @out = SUBSTRING(@out, 1, LEN(@out)-LEN(@seperator))
-	--PRINT @out
 
 	CLOSE cs;
 	DEALLOCATE cs;
 END
-
-DROP PROCEDURE getColumnNames;
-DECLARE @out VARCHAR(MAX)
-EXEC getColumnNames @table='DW_Landing.Categories_Dim', @seperator=' , ', @prefix='SRC.', @out=@out OUTPUT
-SELECT @out
 
 -------------------------------------------------------------------------------------------
 
@@ -83,7 +77,6 @@ BEGIN
 	OPEN cs;
 
 	DECLARE @columnName varchar(50) = '', @dataType nvarchar(50) = ''
-	--SET @condition = '('
 
 	FETCH NEXT FROM cs INTO @columnName, @dataType
 	WHILE @@FETCH_STATUS = 0
@@ -99,34 +92,22 @@ BEGIN
 	END
 
 	SET @condition = SUBSTRING(@condition, 1, LEN(@condition)-LEN(@seperator))
-	--SET @condition = CONCAT(@condition, ')')
-	--PRINT @condition
 
 	CLOSE cs;
 	DEALLOCATE cs;
 END
 
-DROP PROCEDURE generate_conditions;
-DECLARE @condition varchar(max)
-EXEC generate_conditions @table='DW_Landing.Categories_Dim', @operator='!=', @seperator=' OR ', @condition=@condition OUTPUT
-SELECT @condition;
-
 ----------------------------------------------------------------------------------------------
 
-CREATE PROCEDURE AutoSCD1 --could take more variables
+CREATE PROCEDURE AutoSCD1 
 @SourceTable varchar(127),
 @TargetTable varchar(127),
 @matching_condition varchar(127)
 AS
 BEGIN
 	DECLARE @query varchar(max), @cond1 varchar(max), @query2 varchar(max), @columns varchar(max),
-	@src_columns varchar(max), @src_table_name varchar(max)
+	@src_columns varchar(max)
 
-	SET @src_table_name = SUBSTRING(@SourceTable, CHARINDEX('.', @SourceTable)+1, LEN(@SourceTable)-CHARINDEX('.', @SourceTable))
-	--PRINT @src_table_name
-
-	--DECLARE @ColumnNames = (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @SourceTable)
-	--EXEC generate_matching_condition @table=@src_table_name, @condition=@matching_condition OUTPUT
 	EXEC generate_conditions @table=@SourceTable, @operator='!=', @seperator='OR ', @isSetQuery = 0, @condition=@cond1 OUTPUT
 	EXEC generate_conditions @table=@SourceTable, @operator='=', @seperator=' , ', @condition=@query2 OUTPUT
 	EXEC getColumnNames @table=@SourceTable, @seperator=' , ', @out=@columns OUTPUT
@@ -143,16 +124,11 @@ BEGIN
 		'WHEN NOT MATCHED' + CHAR(13) +
 		'THEN INSERT ' + '(' + @columns + ', SourceTable)' + CHAR(13) +
 		'VALUES (' + @src_columns + ', ' + '''' + @SourceTable + '''' + ');'
-	
-	PRINT @query
 
 	EXEC(@query)
-
-	--SET @query = 'TRUNCATE TABLE ' + @SourceTable
-	--EXEC(@query)
-
 END
 
+/*
 DROP PROCEDURE AutoSCD1;
 EXEC AutoSCD1 @SourceTable='DW_Landing.Categories_Dim', @TargetTable='DW_Staging.Categories_Dim', @matching_condition='TGT.CategoriesKey=SRC.CategoriesKey'
 
@@ -164,3 +140,4 @@ SET CategoryName = 'New Toys'
 WHERE CategoriesKey = 2
 
 SELECT * FROM DW_Staging.Categories_Dim
+*/
