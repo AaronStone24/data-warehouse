@@ -53,7 +53,8 @@ def oltp_to_olap_mapping(oltp_table_name, olap_table_name, mapping: dict, conn):
 
         # Write the data to the OLAP database
         try:
-            oltp_df.to_sql(olap_table_name, conn, schema=LND_SCHEMA, if_exists='fail', index=False)
+            # TODO: replace with "fail" later
+            oltp_df.to_sql(olap_table_name, conn, schema=LND_SCHEMA, if_exists='append', index=False)
             logger.info(f'Wrote the data to the {olap_table_name} OLAP database.')
         except ValueError as e:
             raise TableExistsError(f"Table '{olap_table_name}' already exists in the OLAP database.")
