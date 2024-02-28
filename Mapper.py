@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 from Constants import OLTP_SCHEMA, LND_SCHEMA, logger
+from Exceptions import TableExistsError, MappingError
 
 '''
     Function to map the OLTP tables to OLAP tables
@@ -51,14 +52,24 @@ def oltp_to_olap_mapping(oltp_table_name, olap_table_name, mapping: dict, conn):
         logger.info(f'Added the loadTimeDate column to the DataFrame.')
 
         # Write the data to the OLAP database
-        oltp_df.to_sql(olap_table_name, conn, schema=LND_SCHEMA, if_exists='fail', index=False)
-        logger.info(f'Written the data to the {olap_table_name} OLAP database.')
+        try:
+            oltp_df.to_sql(olap_table_name, conn, schema=LND_SCHEMA, if_exists='fail', index=False)
+            logger.info(f'Wrote the data to the {olap_table_name} OLAP database.')
+        except ValueError as e:
+            raise TableExistsError(f"Table '{olap_table_name}' already exists in the OLAP database.")
+        except Exception as e:
+            raise e
 
         conn.commit()
-        logger.info(f'Committed the changes to the {olap_table_name} OLAP database.')
+        logger.info(f'Committed the changes to the {olap_table_name} in OLAP database.')
     
+    except TableExistsError as e:
+        logger.warning(e)
+        # raise e
+
     except Exception as e:
         logger.error(f'Error in mapping {oltp_table_name} to {olap_table_name}: {e}')
+        raise MappingError(oltp_table_name, olap_table_name, f'Error in mapping {oltp_table_name} to {olap_table_name}: {e}')
 
 def customerEmployee_Fact_mapper(conn):
     try:

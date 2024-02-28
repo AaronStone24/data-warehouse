@@ -2,16 +2,13 @@
 # loading data from OLTP to Landing
 # calling the merge stored procedure from the Landing to Staging
 # calling the merge from the Staging to the Data Warehouse (SCD 2)
-# Truncate the Landing tables
+# Truncate the necessary tables
 
-import os
 from sqlalchemy import create_engine
 
 from OLTPtoOLAP import load_dimension_tables, load_fact_tables
 from StoredProcedure import execute_merge_proc
 from Constants import logger, CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, DIM_TABLES, FACT_TABLES
-
-#TODO: Error Handling for each section and terminate if any section fails
 
 def main():
     # Create a connection to the OLTP database
@@ -29,6 +26,7 @@ def main():
             # Load the dimension tables
             load_dimension_tables(conn)
 
+            # TODO: Load the bridge tables instead of fact tables
             # Load the fact tables
             load_fact_tables(conn)
 
@@ -38,7 +36,7 @@ def main():
             # Execute the stored procedure to merge the data from Landing to Staging for each dimension table
             logger.info('Executing the stored procedure to merge the data from Landing to Staging for each dimension table.')
             for dt in DIM_TABLES:
-                t = dt.split('_')[0] 
+                t = dt.split('_')[0]
                 execute_merge_proc(
                     conn,
                     'AutoSCD1',
@@ -46,12 +44,9 @@ def main():
                     f'{STG_SCHEMA}.{dt}',
                     f'TGT.{t}Key=SRC.{t}Key'
                 )
-                logger.info('Successfully executed AutoSCD1 merge procedure for {dt}.')
-           
+
     except Exception as e:
-        logger.error(f'Error in the main function: {e}')
-        
-        
+        logger.error(f'Error in the main function: {e.__class__.__name__}: {e}')
 
 
 if __name__ == '__main__':

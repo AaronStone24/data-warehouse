@@ -104,28 +104,39 @@ CREATE PROCEDURE AutoSCD1
 @TargetTable varchar(127),
 @matching_condition varchar(127)
 AS
+SET NOCOUNT ON
 BEGIN
-	DECLARE @query varchar(max), @cond1 varchar(max), @query2 varchar(max), @columns varchar(max),
-	@src_columns varchar(max)
+	BEGIN TRY
+		DECLARE @query varchar(max), @cond1 varchar(max), @query2 varchar(max), @columns varchar(max),
+		@src_columns varchar(max)
 
-	EXEC generate_conditions @table=@SourceTable, @operator='!=', @seperator='OR ', @isSetQuery = 0, @condition=@cond1 OUTPUT
-	EXEC generate_conditions @table=@SourceTable, @operator='=', @seperator=' , ', @condition=@query2 OUTPUT
-	EXEC getColumnNames @table=@SourceTable, @seperator=' , ', @out=@columns OUTPUT
-	EXEC getColumnNames @table=@SourceTable, @seperator=' , ', @prefix='SRC.', @out=@src_columns OUTPUT
+		EXEC generate_conditions @table=@SourceTable, @operator='!=', @seperator='OR ', @isSetQuery = 0, @condition=@cond1 OUTPUT
+		EXEC generate_conditions @table=@SourceTable, @operator='=', @seperator=' , ', @condition=@query2 OUTPUT
+		EXEC getColumnNames @table=@SourceTable, @seperator=' , ', @out=@columns OUTPUT
+		EXEC getColumnNames @table=@SourceTable, @seperator=' , ', @prefix='SRC.', @out=@src_columns OUTPUT
 
-	SET @query = 'MERGE ' + @TargetTable + ' AS TGT' + CHAR(13) + 
-		'USING ' + @SourceTable + ' AS SRC' + CHAR(13) + 
-		'ON ' + @matching_condition + CHAR(13) + 
-		'WHEN MATCHED AND' + CHAR(13) +
-		'(' + @cond1 + ')' + CHAR(13) +
-		'THEN UPDATE' + CHAR(13) +
-		'SET ' + @query2 + CHAR(13) +
-		CHAR(13) +
-		'WHEN NOT MATCHED' + CHAR(13) +
-		'THEN INSERT ' + '(' + @columns + ', SourceTable)' + CHAR(13) +
-		'VALUES (' + @src_columns + ', ' + '''' + @SourceTable + '''' + ');'
+		SET @query = 'MERGE ' + @TargetTable + ' AS TGT' + CHAR(13) + 
+			'USING ' + @SourceTable + ' AS SRC' + CHAR(13) + 
+			'ON ' + @matching_condition + CHAR(13) + 
+			'WHEN MATCHED AND' + CHAR(13) +
+			'(' + @cond1 + ')' + CHAR(13) +
+			'THEN UPDATE' + CHAR(13) +
+			'SET ' + @query2 + CHAR(13) +
+			CHAR(13) +
+			'WHEN NOT MATCHED' + CHAR(13) +
+			'THEN INSERT ' + '(' + @columns + ', SourceTable)' + CHAR(13) +
+			'VALUES (' + @src_columns + ', ' + '''' + @SourceTable + '''' + ');'
+	
+		EXEC(@query)
+		
+		DECLARE @result varchar(max) = ''
+		SET @result = '0, ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected, Procedure AutoSCD1 executed successfully!'
+	END TRY
 
-	EXEC(@query)
+	BEGIN CATCH
+		SET @result = CAST(ERROR_NUMBER() AS varchar(10)) + ', Error: ' + ERROR_MESSAGE()
+	END CATCH
+	SELECT @result AS the_output;
 END
 
 /*
