@@ -3,8 +3,8 @@ import numpy as np
 import pyodbc as odbc
 from sqlalchemy import create_engine
 
-from Constants import CONNECTION_URL, SRC_SCHEMA, TGT_SCHEMA
-from Mapper import oltp_to_olap_mapping, customerEmployee_Fact_mapper, ProductInStock_Fact_mapper
+from Constants import CONNECTION_URL, SRC_SCHEMA, TGT_SCHEMA, logger
+from Mapper import oltp_to_olap_mapping, customerEmployee_Fact_mapper, productInStock_Fact_mapper
 
 # TODO: Logging and Error Handling
 # TODO: Consider using a configuration file for the connection strings
@@ -12,10 +12,15 @@ from Mapper import oltp_to_olap_mapping, customerEmployee_Fact_mapper, ProductIn
 
 # Create a connection to the OLTP database
 engine = create_engine(CONNECTION_URL)
+logger.info('Created engine to connect to the OLTP database.')
 
 # Read the data from the OLTP database by obtaining the connection
 with engine.connect() as conn:
+    logger.info('Connected to the OLTP database.')
+
     # Mapping the OLTP tables to OLAP tables
+    logger.info('Starting mapping of OLTP tables to OLAP tables.')
+
     '''
     OLTP: Products(ProductID, ProductName, UnitPrice, Discontinued)
     OLAP: Product_Dim(ProductKey, ProductID, ProductName, UnitPrice, Discontinued)
@@ -27,6 +32,7 @@ with engine.connect() as conn:
         {'ProductID': 'ProductID', 'ProductName': 'ProductName', 'UnitPrice': 'UnitPrice', 'Discontinued': 'Discontinued'},
         conn
     )
+    logger.info('Mapped Products to Product_Dim.')
 
     '''
     OLTP: Suppliers(SupplierID, CompanyName, ContactName, ContactTitle, Address, City, Region, PostalCode, Country, Phone)
@@ -38,6 +44,7 @@ with engine.connect() as conn:
         {'SupplierID': 'SupplierID', 'CompanyName': 'CompanyName', 'ContactName': 'ContactName', 'ContactTitle': 'ContactTitle', 'Address': 'SupplierAddress', 'City': 'City', 'Region': 'Region', 'PostalCode': 'PostalCode', 'Country': 'Country', 'Phone': 'Phone'},
         conn
     )
+    logger.info('Mapped Suppliers to Supplier_Dim.')
 
     '''
     OLTP: Categories(CategoryID, CategoryName, Description)
@@ -49,6 +56,7 @@ with engine.connect() as conn:
         {'CategoryID': 'CategoryID', 'CategoryName': 'CategoryName', 'Description': 'CatDescription'},
         conn
     )
+    logger.info('Mapped Categories to Categories_Dim.')
 
     '''
     OLTP: Orders(OrderDate)
@@ -60,6 +68,7 @@ with engine.connect() as conn:
         {'OrderDate': 'FullDate'},
         conn
     )
+    logger.info('Used Orders to map to Calendar_Dim.')
 
     '''
     OLTP: Customers(CustomerID, CompanyName, ContactName, ContactTitle, Address, City, Region, PostalCode, Country, Phone)
@@ -71,6 +80,7 @@ with engine.connect() as conn:
         {'CustomerID': 'CustomerID', 'CompanyName': 'CompanyName', 'ContactName': 'ContactName', 'ContactTitle': 'ContactTitle', 'Address': 'CustAddress', 'City': 'City', 'Region': 'Region', 'PostalCode': 'PostalCode', 'Country': 'Country', 'Phone': 'Phone'},
         conn
     )
+    logger.info('Mapped Customers to Customer_Dim.')
 
     '''
     OLTP: Employees(EmployeeID, LastName, FirstName, BirthDate, HireDate, Region, Country)
@@ -82,15 +92,18 @@ with engine.connect() as conn:
         {'EmployeeID': 'EmployeeID', 'LastName': 'LastName', 'FirstName': 'FirstName', 'BirthDate': 'BirthDate', 'HireDate': 'HireDate', 'Region': 'Region', 'Country': 'Country'},
         conn
     )
+    logger.info('Mapped Employees to Employee_Dim.')
     
     '''
     OLTP: Orders(OrderID), OrderDetails(OrderID, UnitPrice, Quantity, Discount)
     OLAP: CustomerEmployee_Fact(CustomerKey, EmployeeKey, CalendarKey, OrderID, Sales, loadTimeDate, SourceTable)
     '''
     customerEmployee_Fact_mapper(conn)
+    logger.info('Used Orders and OrderDetails to map to CustomerEmployee_Fact.')
 
     '''
     OLTP: Orders(OrderID), Order Details(ProductID, Quantity), Products(UnitsInStock, UnitsOnOrder, ReorderLevel)
     OLAP: ProductInStock_Fact(CalendarKey, ProductKey, CategoriesKey, SupplierKey, UnitsInStock, UnitsOnOrder, ReorderLevel, TotalQuantity, OrderID, loadTimeDate, SourceTable)
     '''
-    ProductInStock_Fact_mapper(conn)
+    productInStock_Fact_mapper(conn)
+    logger.info('Used Orders, OrderDetails and Products to map to ProductInStock_Fact.')
