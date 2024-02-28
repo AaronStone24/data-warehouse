@@ -12,8 +12,8 @@ CONNECTION_URL = URL.create('mssql+pyodbc', query={'odbc_connect': CONNECTION_ST
 
 logging.basicConfig(filename='DW.log',
     filemode='w', 
-    format='%(name)s - %(levelname)s - %(asctime)s - %(message)s', 
+    format='[%(filename)s:%(lineno)s - %(funcName)20s()] - %(levelname)s - %(asctime)s - %(message)s', 
     level=logging.DEBUG,
     datefmt='%d-%m-%Y %H:%M:%S'
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('DW')

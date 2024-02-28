@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from Constants import CONNECTION_URL, SRC_SCHEMA, TGT_SCHEMA, logger
 from Mapper import oltp_to_olap_mapping, customerEmployee_Fact_mapper, productInStock_Fact_mapper
 
-# TODO: Logging and Error Handling
+# TODO: Error Handling
 # TODO: Consider using a configuration file for the connection strings
 # TODO: Consider using SqlAlchemy's ORM based Tables
 
