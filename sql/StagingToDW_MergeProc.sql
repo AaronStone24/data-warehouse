@@ -104,6 +104,62 @@ SELECT @condition;
 ---------------------------------------------------------------------------------------------------------------
 
 GO
+CREATE PROCEDURE DW_Staging.generateTempTableColumnStrings
+@referenceTable varchar(127),
+@seperator varchar(5),
+@out varchar(max) OUTPUT
+AS
+BEGIN
+	DECLARE @schema varchar(max) = ''
+	SET @schema = SUBSTRING(@referenceTable, 1, CHARINDEX('.', @referenceTable)-1)
+	SET @referenceTable = SUBSTRING(@referenceTable, CHARINDEX('.', @referenceTable)+1, LEN(@referenceTable)-CHARINDEX('.', @referenceTable))
+
+	DECLARE cs CURSOR FOR 
+	SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS 
+	WHERE UPPER(TABLE_NAME) = UPPER(@referenceTable) AND
+		UPPER(TABLE_SCHEMA) = UPPER(@schema)
+
+	OPEN cs;
+
+	DECLARE @columnName varchar(50) = '', @dataType varchar(50) = '', @charMaxLength int = 0
+
+	FETCH NEXT FROM cs INTO @columnName, @dataType, @charMaxLength
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+		IF COLUMNPROPERTY(OBJECT_ID(@schema + '.' + @referenceTable), @columnName, 'IsIdentity') != 1
+		BEGIN
+			IF (UPPER(@dataType) = UPPER('varchar') OR UPPER(@dataType) = UPPER('nvarchar') OR
+				UPPER(@dataType) = UPPER('char') OR UPPER(@dataType) = UPPER('nchar')) AND
+				@charMaxLength IS NOT NULL
+					IF @charMaxLength = -1
+						SET @dataType = CONCAT(@dataType, '(max)')
+					ELSE
+						SET @dataType = CONCAT(@dataType, '(', @charMaxLength, ')')
+			
+			IF UPPER(@columnName) = UPPER('loadTimeDate')
+				SET @out = CONCAT(@out, @columnName, ' ', @dataType, ' DEFAULT CURRENT_TIMESTAMP', @seperator)
+			ELSE
+				SET @out = CONCAT(@out, @columnName, ' ', @dataType, @seperator)
+		END
+		FETCH NEXT FROM cs INTO @columnName, @dataType, @charMaxLength
+	END
+
+	SET @out = SUBSTRING(@out, 1, LEN(@out)-LEN(@seperator))
+
+	CLOSE cs;
+	DEALLOCATE cs;
+END
+
+/*
+DECLARE @out varchar(max)
+EXEC DW_Staging.generateTempTableColumnStrings @referenceTable='DW.Categories_Dim', @seperator=' , ', @out=@out OUTPUT
+SELECT @out;
+DROP PROCEDURE DW_Staging.generateTempTableColumnStrings;
+*/
+
+---------------------------------------------------------------------------------------------------------------
+
+GO
 CREATE PROCEDURE DW_Staging.AutoSCD2
 @SourceTable varchar(127),
 @TargetTable varchar(127),
@@ -124,7 +180,15 @@ BEGIN
 		EXEC DW_Staging.getColumnNames @table=@SourceTable, @seperator=' , ', @prefix='SRC.', @out=@src_table_prefix_columns OUTPUT
 		EXEC DW_Staging.getColumnNames @table=@SourceTable, @seperator=' , ', @prefix='SRC.', @includeSourceTableColumn = 1, @out=@src_table_prefix_columns_wsc OUTPUT
 
-		SET @query = 'INSERT INTO ' + @TargetTable + ' (' + @tgt_table_columns_wsc + ')' + CHAR(13) +
+		DECLARE @tempTableName varchar(127) = 'tempTable', @tempTableColumns varchar(max) = ''
+
+		EXEC DW_Staging.generateTempTableColumnStrings @referenceTable=@TargetTable, @seperator=' , ', @out=@tempTableColumns OUTPUT
+
+		SET @query = 'DECLARE @' + @tempTableName + ' TABLE (' + @tempTableColumns + ')' + CHAR(13)
+
+		SET @query = CONCAT(
+			@query,
+			'INSERT INTO @' + @tempTableName + ' (' + @tgt_table_columns_wsc + ')' + CHAR(13) +
 			'SELECT ' + @tgt_table_columns + ', ' + '''' + @SourceTable + '''' + CHAR(13) +
 			'FROM (' + CHAR(13) +
 			'MERGE ' + @TargetTable + ' AS TGT' + CHAR(13) + 
@@ -141,7 +205,15 @@ BEGIN
 			'OUTPUT $action, ' + @src_table_prefix_columns + CHAR(13) +
 			') AS MERGE_OUT (' + CHAR(13) +
 			'action, ' + @tgt_table_columns + ')' + CHAR(13) +
-			'WHERE action = ' + '''' + 'UPDATE' + '''' + ';'
+			'WHERE action = ' + '''' + 'UPDATE' + '''' + ';' + CHAR(13)
+		)
+
+		SET @query = CONCAT(
+			@query,
+			'INSERT INTO ' + @TargetTable + ' (' + @tgt_table_columns + ', loadTimeDate, endTimeDate, SourceTable)' + CHAR(13) +
+			'SELECT *' +  + CHAR(13) +
+			'FROM @' + @tempTableName + ';' + CHAR(13)
+		)
 	
 		--PRINT @query
 
@@ -161,48 +233,67 @@ SELECT '0, Procedures created successfully!' AS [Output]
 
 -- TODO: Delete the code below later
 /*
-INSERT INTO DW.Customer_Dim(customerID ,CompanyName ,ContactName ,ContactTitle ,CustAddress, City, Region, PostalCode, Country, Phone, SourceTable)
-SELECT customerID,CompanyName ,ContactName ,ContactTitle ,CustAddress ,City,Region ,PostalCode ,Country ,Phone , 'DW_Staging.Customer_Dim'
+DECLARE @tempTable TABLE (
+	CategoryID INT,
+	CategoryName VARCHAR(50),
+	CatDescription NTEXT,
+	loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+	endTimeDate DATETIME,
+	SourceTable VARCHAR(MAX)
+)
+
+INSERT INTO @tempTable (CategoryID, CategoryName, CatDescription, SourceTable)
+SELECT CategoryID, CategoryName, CatDescription, 'DW_Staging.Categories_Dim'
 FROM
 (
-	MERGE DW.Customer_Dim AS TGT
-	USING DW_Staging.Customer_Dim AS SRC
-	ON TGT.customerID = SRC.customerID
+	MERGE DW.Categories_Dim AS TGT
+	USING DW_Staging.Categories_Dim AS SRC
+	ON TGT.CategoryID = SRC.categoryID
 	WHEN MATCHED AND ((
 	  --TGT.loadTimeDate <> SRC.loadTimeDate OR
-		TGT.CompanyName<>SRC.CompanyName OR
-		TGT.ContactName<>SRC.ContactName OR
-		TGT.ContactTitle<>SRC.ContactTitle OR
-		TGT.CustAddress<>SRC.CustAddress OR
-		TGT.City<>SRC.City OR
-		TGT.Region<>SRC.Region OR
-		TGT.PostalCode<>SRC.PostalCode OR
-		TGT.Country<>SRC.Country OR
-		TGT.Phone<>SRC.Phone
+		TGT.CategoryID <> SRC.CategoryID OR
+		TGT.CategoryName <> SRC.CategoryName OR
+		CAST(TGT.CatDescription AS nvarchar(max)) <> cast(SRC.CatDescription AS nvarchar(max))
 	) AND TGT.endTimeDate IS NULL)
 	THEN
 	UPDATE SET TGT.endTimeDate = GetDate(),
-		TGT.SourceTable = 'DW_Staging.Customer_Dim'
+		TGT.SourceTable = 'DW_Staging.Categories_Dim'
 
 	WHEN NOT MATCHED BY TARGET THEN
-	INSERT (customerID, CompanyName, ContactName, ContactTitle, CustAddress, City, Region, PostalCode, Country, Phone, SourceTable)
-		VALUES (SRC.customerID, SRC.CompanyName, SRC.ContactName, SRC.ContactTitle, SRC.CustAddress, SRC.City, SRC.Region, SRC.PostalCode, SRC.Country, SRC.Phone, 'DW_Staging.Customer_Dim' )
-	OUTPUT $action, SRC.customerID, SRC.CompanyName, SRC.ContactName, SRC.ContactTitle, SRC.CustAddress, SRC.City, SRC.Region, SRC.PostalCode, SRC.Country, SRC.Phone
+	INSERT (CategoryID, CategoryName, CatDescription, SourceTable)
+		VALUES (SRC.CategoryID, SRC.CategoryName, SRC.CatDescription, 'DW_Staging.Categories_Dim' )
+	OUTPUT $action, SRC.CategoryID, SRC.CategoryName, SRC.CatDescription
 ) AS MERGE_OUT (
 	action,
-	customerID ,
-	CompanyName ,
-	ContactName ,
-	ContactTitle ,
-	CustAddress ,
-	City,
-	Region ,
-	PostalCode ,
-	Country ,
-	Phone
+	CategoryID,
+	CategoryName,
+	CatDescription
 )
 WHERE action = 'UPDATE';
 
+SELECT * FROM @tempTable
+INSERT INTO DW.Categories_Dim (CategoryID, CategoryName, CatDescription, loadTimeDate, endTimeDate, SourceTable)
+SELECT * FROM @tempTable
+
+SELECT * FROM DW_Staging.Categories_Dim
+SELECT * FROM DW.Categories_Dim
+
+DROP TABLE DW.CustomerEmployee_Fact;
+DROP TABLE DW.ProductInStock_Fact;
+TRUNCATE TABLE DW.Categories_Dim
+
+UPDATE DW_Staging.Categories_Dim
+SET CategoryName = 'Beverages'
+WHERE CategoryID = 1
+UPDATE DW_Staging.Categories_Dim
+SET CategoryName = 'Condiments'
+WHERE CategoryID = 2
+
+EXEC DW_Staging.AutoSCD2 @SourceTable='DW_Staging.Categories_Dim', @TargetTable='DW.Categories_Dim', @matching_condition='TGT.CategoryID=SRC.CategoryID'
+DROP PROCEDURE DW_Staging.AutoSCD2;
+*/
+
+/*
 SELECT * FROM DW_Staging.Customer_Dim
 WHERE CustomerID = 'ALFKI'
 SELECT * FROM DW.Customer_Dim
