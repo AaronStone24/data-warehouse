@@ -1,5 +1,6 @@
 DROP PROCEDURE IF EXISTS DW_Staging.getColumnNames
 DROP PROCEDURE IF EXISTS DW_Staging.generate_conditions
+DROP PROCEDURE IF EXISTS DW_Staging.generateTempTableColumnStrings
 DROP PROCEDURE IF EXISTS DW_Staging.AutoSCD2
 
 SELECT '0, Procedures dropped successfully!' AS [Output];

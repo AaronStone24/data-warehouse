@@ -48,7 +48,7 @@ def main():
 
             # TODO: Load the bridge tables instead of fact tables
             # Load the fact tables
-            load_fact_tables(conn)
+            # load_fact_tables(conn)
 
             logger.info('Finished mapping of OLTP tables to OLAP Landing tables.')
             logger.info('-' * 100)
