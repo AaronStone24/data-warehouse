@@ -113,6 +113,7 @@ BEGIN
 		DECLARE @query varchar(max), @check_cond varchar(max), @query2 varchar(max), @src_table_columns varchar(max),
 		@tgt_table_columns_wsc varchar(max), @src_table_prefix_columns varchar(max), @src_table_prefix_columns_wsc varchar(max),
 		@tgt_table_columns varchar(max)
+		DECLARE @result varchar(max) = ''
 
 		EXEC DW_Staging.generate_conditions @table=@SourceTable, @operator='!=', @seperator='OR ', @condition=@check_cond OUTPUT
 		EXEC DW_Staging.getColumnNames @table=@SourceTable, @seperator=' , ', @out=@src_table_columns OUTPUT
@@ -144,7 +145,6 @@ BEGIN
 
 		EXEC(@query)
 		
-		DECLARE @result varchar(max) = ''
 		SET @result = '0, Procedure AutoSCD1 executed successfully!'
 	END TRY
 
@@ -153,6 +153,8 @@ BEGIN
 	END CATCH
 	SELECT @result AS the_output;
 END
+
+SELECT 'Procedures created successfully!' AS [Output];
 
 -- TODO: Delete the code below later
 /*

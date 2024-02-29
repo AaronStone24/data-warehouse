@@ -18,6 +18,7 @@
 */
 
 ------------------------------------------------------------------------------------------
+
 DROP PROCEDURE IF EXISTS DW_Landing.getColumnNames
 DROP PROCEDURE IF EXISTS DW_Landing.generate_conditions
 DROP PROCEDURE IF EXISTS DW_Landing.AutoSCD1
@@ -116,6 +117,7 @@ BEGIN
 	BEGIN TRY
 		DECLARE @query varchar(max), @cond1 varchar(max), @query2 varchar(max), @columns varchar(max),
 		@src_columns varchar(max)
+		DECLARE @result varchar(max) = ''
 
 		EXEC DW_Landing.generate_conditions @table=@SourceTable, @operator='!=', @seperator='OR ', @isSetQuery = 0, @condition=@cond1 OUTPUT
 		EXEC DW_Landing.generate_conditions @table=@SourceTable, @operator='=', @seperator=' , ', @condition=@query2 OUTPUT
@@ -136,7 +138,6 @@ BEGIN
 	
 		EXEC(@query)
 		
-		DECLARE @result varchar(max) = ''
 		SET @result = '0, Procedure AutoSCD1 executed successfully!'
 	END TRY
 
@@ -145,6 +146,8 @@ BEGIN
 	END CATCH
 	SELECT @result AS the_output;
 END
+
+SELECT 'Procedures created successfully!' AS [Output];
 
 /*
 DROP PROCEDURE AutoSCD1;

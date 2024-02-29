@@ -16,3 +16,9 @@ class MergeError(Exception):
         self.merge_proc_name = merge_proc_name
         self.message = message
         super().__init__(self.message)
+
+class SqlError(Exception):
+    def __init__(self, return_code, message):
+        self.return_code = return_code
+        self.message = message
+        super().__init__(self.message)

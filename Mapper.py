@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from Constants import OLTP_SCHEMA, LND_SCHEMA, logger
+from Config import OLTP_SCHEMA, LND_SCHEMA, logger
 from Exceptions import TableExistsError, MappingError
 
 '''
