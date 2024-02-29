@@ -104,7 +104,7 @@ def customerEmployee_Fact_mapper(conn):
         logger.info(f'Added the loadTimeDate column to the DataFrame.')
 
         # Write the data to the OLAP database
-        df.to_sql('CustomerEmployee_Fact', conn, schema=LND_SCHEMA, if_exists='fail', index=False)
+        df.to_sql('CustomerEmployee_Fact', conn, schema=LND_SCHEMA, if_exists='append', index=False)
         logger.info(f'Written the data to the CustomerEmployee_Fact OLAP database.')
         
         conn.commit()
@@ -144,10 +144,81 @@ def productInStock_Fact_mapper(conn):
         logger.info(f'Added the loadTimeDate column to the DataFrame.')
 
         # Write the data to the OLAP database
-        df.to_sql('ProductInStock_Fact', conn, schema=LND_SCHEMA, if_exists='fail', index=False)
+        df.to_sql('ProductInStock_Fact', conn, schema=LND_SCHEMA, if_exists='append', index=False)
         logger.info(f'Written the data to the ProductInStock_Fact OLAP database.')
 
         conn.commit()
         logger.info(f'Committed the changes to the ProductInStock_Fact OLAP database.')
     except Exception as e:
         logger.error(f'Error in mapping ProductInStock_Fact: {e}')
+
+def customerEmployee_Bridge_mapper(conn):
+    try:
+        sql_query = '''SELECT OD.CustomerID, OD.EmployeeID, OD.OrderDate, OD.OrderID, 
+        SUM(UnitPrice * (1 - Discount) * Quantity) AS Sales
+        FROM {0}.Orders OD
+        JOIN {0}.[Order Details] ODT
+        ON OD.OrderID = ODT.OrderID
+        GROUP BY OD.CustomerID, OD.EmployeeID, OD.OrderDate, OD.OrderID'''.format(OLTP_SCHEMA)
+        logger.info(f'Executing the query to select data from oltp tables: {sql_query}')
+
+        df = pd.read_sql_query(sql_query, conn)
+        print(df.head())
+        logger.info(f'Read the data from the OLTP database: {OLTP_SCHEMA}.Orders, {OLTP_SCHEMA}.OrderDetails.')
+
+        # Replace the missing values with NaN
+        df.replace('', np.NaN, inplace=True)
+        logger.info(f'Replaced the missing values with NaN in the dataframe.')
+
+        # Add the SourceTable column to the DataFrame
+        df['SourceTable'] = f'{OLTP_SCHEMA}.Orders, {OLTP_SCHEMA}.OrderDetails'
+        logger.info(f'Added the SourceTable column to the DataFrame.')
+
+        # Add the loadTimeDate column to the DataFrame
+        df['loadTimeDate'] = pd.to_datetime('now')
+        logger.info(f'Added the loadTimeDate column to the DataFrame.')
+
+        # Write the data to the OLAP database
+        df.to_sql('CustomerEmployee_Bridge', conn, schema=LND_SCHEMA, if_exists='append', index=False)
+        logger.info(f'Written the data to the {LND_SCHEMA}.CustomerEmployee_Bridge OLAP database.')
+
+        conn.commit()
+        logger.info(f'Committed the changes to the {LND_SCHEMA}.CustomerEmployee_Bridge OLAP database.')
+    except Exception as e:
+        logger.error(f'Error in mapping CustomerEmployee_Bridge: {e}')
+
+def productInStock_Bridge_mapper(conn):
+    try:
+        sql_query = '''SELECT PDT.ProductID, PDT.CategoryID, PDT.SupplierID, UnitsInStock, UnitsOnOrder, ReorderLevel,
+        OD.OrderDate,
+        SUM(Quantity) OVER (PARTITION BY ODT.ProductID) AS TotalQuantity,
+        OD.OrderID
+        FROM {0}.Orders OD
+        JOIN {0}.[Order Details] ODT ON OD.OrderID = ODT.OrderID
+        JOIN {0}.Products PDT ON ODT.ProductID = PDT.ProductID'''.format(OLTP_SCHEMA)
+        logger.info(f'Executing the query to select data from oltp tables: {sql_query}')
+
+        df = pd.read_sql_query(sql_query, conn)
+        print(df.head())
+        logger.info(f'Read the data from the OLTP database: {OLTP_SCHEMA}.Orders, {OLTP_SCHEMA}.[Order Details], {OLTP_SCHEMA}.Products.')
+
+        # Replace the missing values with NaN
+        df.replace('', np.NaN, inplace=True)
+        logger.info(f'Replaced the missing values with NaN in the dataframe.')
+
+        # Add the SourceTable column to the DataFrame
+        df['SourceTable'] = f'{OLTP_SCHEMA}.[Order Details]'
+        logger.info(f'Added the SourceTable column to the DataFrame.')
+
+        # Add the loadTimeDate column to the DataFrame
+        df['loadTimeDate'] = pd.to_datetime('now')
+        logger.info(f'Added the loadTimeDate column to the DataFrame.')
+
+        # Write the data to the OLAP database
+        df.to_sql('ProductInStock_Bridge', conn, schema=LND_SCHEMA, if_exists='append', index=False)
+        logger.info(f'Written the data to the {LND_SCHEMA}.ProductInStock_Bridge OLAP database.')
+
+        conn.commit()
+        logger.info(f'Committed the changes to the {LND_SCHEMA}.ProductInStock_Bridge OLAP database.')
+    except Exception as e:
+        logger.error(f'Error in mapping ProductInStock_Bridge: {e}')

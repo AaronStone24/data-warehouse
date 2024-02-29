@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 
-from Config import CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, logger
-from Mapper import oltp_to_olap_mapping, customerEmployee_Fact_mapper, productInStock_Fact_mapper
+from Config import CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, logger
+from Mapper import *
 from Exceptions import MappingError
 
 # TODO: Consider using a configuration file for the connection strings
@@ -91,20 +91,38 @@ def load_dimension_tables(conn):
     except Exception as e:
         raise e
 
-def load_fact_tables(conn):
-    # Load the fact tables
-    logger.info('Loading the fact tables.')
+def create_fact_tables(conn):
+    # Create the fact tables
+    logger.info(f'Creating the fact tables in the {DW_SCHEMA} Layer.')
 
     '''
     OLTP: Orders(OrderID), OrderDetails(OrderID, UnitPrice, Quantity, Discount)
     OLAP: CustomerEmployee_Fact(CustomerKey, EmployeeKey, CalendarKey, OrderID, Sales, loadTimeDate, SourceTable)
     '''
     customerEmployee_Fact_mapper(conn)
-    logger.info('Used Orders and OrderDetails to map to CustomerEmployee_Fact.')
+    logger.info(f'Used {STG_SCHEMA}.CustomerEmployee_Bridge and relevant dim tables to create {DW_SCHEMA}.CustomerEmployee_Fact.')
 
     '''
     OLTP: Orders(OrderID), Order Details(ProductID, Quantity), Products(UnitsInStock, UnitsOnOrder, ReorderLevel)
     OLAP: ProductInStock_Fact(CalendarKey, ProductKey, CategoriesKey, SupplierKey, UnitsInStock, UnitsOnOrder, ReorderLevel, TotalQuantity, OrderID, loadTimeDate, SourceTable)
     '''
     productInStock_Fact_mapper(conn)
-    logger.info('Used Orders, OrderDetails and Products to map to ProductInStock_Fact.')
+    logger.info(f'Used {STG_SCHEMA}.ProductInStock_Bridge and relevant dim tables to create {DW_SCHEMA}.ProductInStock_Fact.')
+
+def load_bridge_tables(conn):
+    # Load the bridge tables
+    logger.info('Loading the bridge tables.')
+
+    '''
+    OLTP: Orders(CustomerID, EmployeeID, OrderDate, OrderID), OrderDetails(OrderID, UnitPrice, Quantity, Discount)
+    OLAP: CustomerEmployee_Bridge(CustomerID, EmployeeID, OrderDate, OrderID, Sales, loadTimeDate, SourceTable)
+    '''
+    customerEmployee_Bridge_mapper(conn)
+    logger.info(f'Used {OLTP_SCHEMA}.Orders and {OLTP_SCHEMA}.OrderDetails to map to {LND_SCHEMA}.CustomerEmployee_Bridge.')
+
+    '''
+    OLTP: Orders(OrderID, OrderDate), Order Details(Quantity), Products(ProductID, CategoryID, SupplierID, UnitsInStock, UnitsOnOrder, ReorderLevel)
+    OLAP: ProductInStock_Bridge(UnitsInStock, UnitsOnOrder, ReorderLevel, TotalQuantity, OrderID, loadTimeDate, SourceTable)
+    '''
+    productInStock_Bridge_mapper(conn)
+    logger.info(f'Used {OLTP_SCHEMA}.Orders, {OLTP_SCHEMA}.OrderDetails and {OLTP_SCHEMA}.Products to map to {LND_SCHEMA}.ProductInStock_Bridge.')

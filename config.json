@@ -9,15 +9,17 @@
     "DW_SCHEMA": "DW",
     "dimensionTables": ["Product_Dim", "Supplier_Dim", "Categories_Dim", "Calendar_Dim", "Customer_Dim", "Employee_Dim"],
     "factTables": ["CustomerEmployee_Fact", "ProductInStock_Fact"],
+    "bridgeTables": ["ProductInStock_Bridge", "CustomerEmployee_Bridge"],
     "matchingConditions": {
       "Product_Dim": "TGT.ProductID=SRC.ProductID",
       "Supplier_Dim": "TGT.SupplierID=SRC.SupplierID",
       "Categories_Dim": "TGT.CategoryID=SRC.CategoryID",
       "Calendar_Dim": "TGT.FullDate=SRC.FullDate",
       "Customer_Dim": "TGT.CustomerID=SRC.CustomerID",
-      "Employee_Dim": "TGT.EmployeeID=SRC.EmployeeID"
-    },
-    "bridgeTables": []
+      "Employee_Dim": "TGT.EmployeeID=SRC.EmployeeID",
+      "CustomerEmployee_Bridge": "TGT.CEBridgeKey=SRC.CEBridgeKey",
+      "ProductInStock_Bridge": "TGT.PISBridgeKey=SRC.PISBridgeKey"
+    }
   },
   "logging": {
     "name": "DW",

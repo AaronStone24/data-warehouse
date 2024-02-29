@@ -8,8 +8,8 @@ BEGIN TRY
     ELSE
     BEGIN
     --Todo: REMOVE FACT TABLES FROM HERE AND ADD BRIDGE TABLES
-        DROP TABLE IF EXISTS DW_Landing.CustomerEmployee_Fact
-        DROP TABLE IF EXISTS DW_Landing.ProductInStock_Fact
+        DROP TABLE IF EXISTS DW_Landing.CustomerEmployee_Bridge
+        DROP TABLE IF EXISTS DW_Landing.ProductInStock_Bridge
         DROP TABLE IF EXISTS DW_Landing.Categories_Dim
         DROP TABLE IF EXISTS DW_Landing.Product_Dim
         DROP TABLE IF EXISTS DW_Landing.Supplier_Dim
@@ -96,22 +96,23 @@ BEGIN TRY
     SourceTable varchar(max)
     );
     
-    /*
-    create table DW_Landing.CustomerEmployee_Fact(
-    CustomerKey int foreign key references DW_Landing.Customer_Dim(customerkey),
-    EmployeeKey int foreign key references DW_Landing.Employee_Dim(Employeekey),
-    CalendarKey int foreign key references DW_Landing.Calendar_Dim(CalendarKey),
+    create table DW_Landing.CustomerEmployee_Bridge(
+    CEBridgeKey int primary key identity,
+    CustomerID varchar(10),
+    EmployeeID int,
+    OrderDate DATETIME,
     OrderId varchar(max),
     Sales money,
     loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     SourceTable varchar(max)
     );
     
-    create table DW_Landing.ProductInStock_Fact(
-    Calendarkey int foreign key references DW_Landing.Calendar_Dim(CalendarKey),
-    ProductKey int foreign key references DW_Landing.Product_dim(productKey),
-    CategoriesKey int foreign key references DW_Landing.Categories_dim(categoriesKey),
-    SupplierKey int foreign key references DW_Landing.supplier_dim(supplierKey),
+    create table DW_Landing.ProductInStock_Bridge(
+    PISBridgeKey int primary key identity,
+    ProductID varchar(5),
+    CategoryID int,
+    SupplierID int,
+    OrderDate DATETIME,
     UnitsInStock int,
     UnitsOnOrder int,
     ReorderLevel int,
@@ -119,8 +120,7 @@ BEGIN TRY
     OrderId varchar(20),
     loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     SourceTable varchar(max)
-    )
-    */
+    );
 
     SET @result = '0, Landing tables created successfully!'
 END TRY

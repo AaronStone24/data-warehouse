@@ -8,8 +8,8 @@ BEGIN TRY
     ELSE
     BEGIN
     --Todo: REMOVE FACT TABLES FROM HERE AND ADD BRIDGE TABLES
-        DROP TABLE IF EXISTS DW_Staging.CustomerEmployee_Fact
-        DROP TABLE IF EXISTS DW_Staging.ProductInStock_Fact
+        DROP TABLE IF EXISTS DW_Staging.CustomerEmployee_Bridge
+        DROP TABLE IF EXISTS DW_Staging.ProductInStock_Bridge
         DROP TABLE IF EXISTS DW_Staging.Categories_Dim
         DROP TABLE IF EXISTS DW_Staging.Product_Dim
         DROP TABLE IF EXISTS DW_Staging.Supplier_Dim
@@ -95,22 +95,23 @@ BEGIN TRY
     SourceTable varchar(max)
     );
     
-    /*
-    create table DW_Staging.CustomerEmployee_Fact(
-    CustomerKey int foreign key references DW_Staging.Customer_Dim(customerkey),
-    EmployeeKey int foreign key references DW_Staging.Employee_Dim(Employeekey),
-    CalendarKey int foreign key references DW_Staging.Calendar_Dim(CalendarKey),
+    create table DW_Staging.CustomerEmployee_Bridge(
+    CEBridgeKey int primary key identity,
+    CustomerID varchar(10),
+    EmployeeID int,
+    OrderDate DATETIME,
     OrderId varchar(max),
     Sales money,
     loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     SourceTable varchar(max)
     );
     
-    create table DW_Staging.ProductInStock_Fact(
-    Calendarkey int foreign key references DW_Staging.Calendar_Dim(CalendarKey),
-    ProductKey int foreign key references DW_Staging.Product_dim(productKey),
-    CategoriesKey int foreign key references DW_Staging.Categories_dim(categoriesKey),
-    SupplierKey int foreign key references DW_Staging.supplier_dim(supplierKey),
+    create table DW_Staging.ProductInStock_Bridge(
+    PISBridgeKey int primary key identity,
+    ProductID varchar(5),
+    CategoryID int,
+    SupplierID int,
+    OrderDate DATETIME,
     UnitsInStock int,
     UnitsOnOrder int,
     ReorderLevel int,
@@ -118,8 +119,7 @@ BEGIN TRY
     OrderId varchar(20),
     loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     SourceTable varchar(max)
-    )
-    */
+    );
 
     SET @result = '0, Staging tables created successfully!'
 END TRY

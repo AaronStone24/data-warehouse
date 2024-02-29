@@ -6,7 +6,7 @@
 
 from sqlalchemy import create_engine
 
-from OLTPtoOLAP import load_dimension_tables, load_fact_tables
+from OLTPtoOLAP import load_dimension_tables, create_fact_tables, load_bridge_tables
 from StoredProcedure import execute_merge_proc
 from SQLRunner import run_sql_file
 from Config import *
@@ -39,23 +39,28 @@ def main():
                 run_sql_file(conn, 'LandingToStaging_MergeProc.sql')
                 run_sql_file(conn, 'StagingToDW_MergeProc.sql')
                 logger.info('Finished creating the required stored procedures.')
+            
+            logger.info('-' * 200)
 
             # Mapping the OLTP tables to OLAP tables
             logger.info('Starting mapping of OLTP tables to OLAP Landing tables.')
 
             # Load the dimension tables
             load_dimension_tables(conn)
+            logger.info(f'Finished mapping of OLTP tables to Dimension tables of {LND_SCHEMA}.')
+            logger.info('-' * 200)
 
             # TODO: Load the bridge tables instead of fact tables
-            # Load the fact tables
-            # load_fact_tables(conn)
+            # Load the bridge tables
+            load_bridge_tables(conn)
+            logger.info(f'Finished mapping of OLTP tables to Bridge tables of {LND_SCHEMA}.')
+            logger.info('-' * 200)
 
-            logger.info('Finished mapping of OLTP tables to OLAP Landing tables.')
-            logger.info('-' * 100)
 
             # Execute the AutoSCD1 stored procedure to merge the data from Landing to Staging for each dimension table
-            logger.info('Executing the AutoSCD1 stored procedure to merge the data from Landing to Staging for each dimension table.')
-            for dt in DIM_TABLES:
+            logger.info('Executing the AutoSCD1 stored procedure to merge the data from Landing to Staging for each dimension and bridge table.')
+            table_list = DIM_TABLES + BRIDGE_TABLES
+            for dt in table_list:
                 execute_merge_proc(
                     conn,
                     f'{LND_SCHEMA}.AutoSCD1',
@@ -63,6 +68,7 @@ def main():
                     f'{STG_SCHEMA}.{dt}',
                     MATCHING_CONDITIONS[dt]
                 )
+            logger.info('-' * 200)
 
             # Execute the AutoSCD2 stored procedure to merge the data from Staging to Data Warehouse for each dimension table
             logger.info('Executing the AutoSCD2 stored procedure to merge the data from Staging to Data Warehouse for each dimension table.')
@@ -74,6 +80,11 @@ def main():
                     f'{DW_SCHEMA}.{dt}',
                     MATCHING_CONDITIONS[dt]
                 )
+            logger.info('-' * 200)
+
+            # Create the fact tables
+            # create_fact_tables(conn)
+
 
     except Exception as e:
         logger.error(f'Error in the main function: {e.__class__.__name__}: {e}')
