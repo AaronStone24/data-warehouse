@@ -23,7 +23,8 @@
   },
   "logging": {
     "name": "DW",
-    "filename": "DW.log"
+    "filename": "DW.log",
+    "overwrite": true
   },
   
   "refreshTables": true,

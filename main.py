@@ -83,7 +83,7 @@ def main():
             logger.info('-' * 200)
 
             # Create the fact tables
-            # create_fact_tables(conn)
+            create_fact_tables(conn)
 
 
     except Exception as e:

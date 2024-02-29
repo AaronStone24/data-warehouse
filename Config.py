@@ -50,7 +50,7 @@ try:
         REFRESH_PROCEDURES = config['refreshProcedures']
 
         logging.basicConfig(filename=config['logging']['filename'],
-            filemode='w', 
+            filemode='w' if config['logging']['overwrite'] else 'a',
             format='[%(filename)s:%(lineno)s - %(funcName)30s()] - %(levelname)s - %(asctime)s - %(message)s', 
             level=logging.DEBUG,
             datefmt='%d-%m-%Y %H:%M:%S'

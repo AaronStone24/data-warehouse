@@ -100,14 +100,14 @@ def create_fact_tables(conn):
     OLAP: CustomerEmployee_Fact(CustomerKey, EmployeeKey, CalendarKey, OrderID, Sales, loadTimeDate, SourceTable)
     '''
     customerEmployee_Fact_mapper(conn)
-    logger.info(f'Used {STG_SCHEMA}.CustomerEmployee_Bridge and relevant dim tables to create {DW_SCHEMA}.CustomerEmployee_Fact.')
+    logger.info(f'Used {STG_SCHEMA}.CustomerEmployee_Bridge and relevant dimension tables to create {DW_SCHEMA}.CustomerEmployee_Fact.')
 
     '''
     OLTP: Orders(OrderID), Order Details(ProductID, Quantity), Products(UnitsInStock, UnitsOnOrder, ReorderLevel)
     OLAP: ProductInStock_Fact(CalendarKey, ProductKey, CategoriesKey, SupplierKey, UnitsInStock, UnitsOnOrder, ReorderLevel, TotalQuantity, OrderID, loadTimeDate, SourceTable)
     '''
     productInStock_Fact_mapper(conn)
-    logger.info(f'Used {STG_SCHEMA}.ProductInStock_Bridge and relevant dim tables to create {DW_SCHEMA}.ProductInStock_Fact.')
+    logger.info(f'Used {STG_SCHEMA}.ProductInStock_Bridge and relevant dimension tables to create {DW_SCHEMA}.ProductInStock_Fact.')
 
 def load_bridge_tables(conn):
     # Load the bridge tables
