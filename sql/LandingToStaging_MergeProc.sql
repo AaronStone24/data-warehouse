@@ -82,7 +82,7 @@ BEGIN
 	WHILE @@FETCH_STATUS = 0
 	BEGIN
 		IF COLUMNPROPERTY(OBJECT_ID(@schema + '.' + @table), @columnName, 'IsIdentity') != 1 AND 
-			UPPER(@columnName) != UPPER('SourceTable')
+			UPPER(@columnName) != UPPER('SourceTable') AND (UPPER(@columnName) != UPPER('loadTimeDate') OR @isSetQuery = 1)
 			IF @isSetQuery = 0 AND @dataType IS NOT NULL AND UPPER(@dataType) = UPPER('ntext')
 				SET @condition = CONCAT(@condition, 'cast( TGT.' + @columnName + ' as nvarchar(max)) ', @operator, ' cast( SRC.' + @columnName + ' as nvarchar(max)) ', @seperator)
 			ELSE
@@ -99,7 +99,7 @@ END
 
 ----------------------------------------------------------------------------------------------
 
-CREATE PROCEDURE AutoSCD1 
+CREATE PROCEDURE AutoSCD1
 @SourceTable varchar(127),
 @TargetTable varchar(127),
 @matching_condition varchar(127)
@@ -123,10 +123,12 @@ BEGIN
 			'THEN UPDATE' + CHAR(13) +
 			'SET ' + @query2 + CHAR(13) +
 			CHAR(13) +
-			'WHEN NOT MATCHED' + CHAR(13) +
+			'WHEN NOT MATCHED BY TARGET' + CHAR(13) +
 			'THEN INSERT ' + '(' + @columns + ', SourceTable)' + CHAR(13) +
 			'VALUES (' + @src_columns + ', ' + '''' + @SourceTable + '''' + ');'
 	
+		--PRINT @query
+
 		EXEC(@query)
 		
 		DECLARE @result varchar(max) = ''
@@ -138,7 +140,6 @@ BEGIN
 	END CATCH
 	SELECT @result AS the_output;
 END
-
 /*
 DROP PROCEDURE AutoSCD1;
 EXEC AutoSCD1 @SourceTable='DW_Landing.Categories_Dim', @TargetTable='DW_Staging.Categories_Dim', @matching_condition='TGT.CategoriesKey=SRC.CategoriesKey'

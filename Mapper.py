@@ -13,7 +13,7 @@ from Exceptions import TableExistsError, MappingError
 '''
 def oltp_to_olap_mapping(oltp_table_name, olap_table_name, mapping: dict, conn):
     try:
-        logger.info(f'Starting mapping of {oltp_table_name} to {olap_table_name}.')
+        logger.info(f'Starting mapping of {OLTP_SCHEMA}.{oltp_table_name} to {LND_SCHEMA}.{olap_table_name}.')
         oltp_columns, olap_columns = list(mapping.keys()), list(mapping.values())
 
         sql_query = f'SELECT {','.join(oltp_columns)} FROM {OLTP_SCHEMA}.{oltp_table_name}'
@@ -23,7 +23,7 @@ def oltp_to_olap_mapping(oltp_table_name, olap_table_name, mapping: dict, conn):
         
         oltp_df = pd.read_sql_query(sql_query, conn)
         print(oltp_df.head())
-        logger.info(f'Read the data from the OLTP database: {oltp_table_name}.')
+        logger.info(f'Read the data from the OLTP database: {OLTP_SCHEMA}.{oltp_table_name}.')
 
         # Replace the missing values with NaN
         oltp_df.replace('', np.NaN, inplace=True)
@@ -54,23 +54,23 @@ def oltp_to_olap_mapping(oltp_table_name, olap_table_name, mapping: dict, conn):
         # Write the data to the OLAP database
         try:
             # TODO: replace with "fail" later
-            oltp_df.to_sql(olap_table_name, conn, schema=LND_SCHEMA, if_exists='append', index=False)
-            logger.info(f'Wrote the data to the {olap_table_name} OLAP database.')
+            oltp_df.to_sql(olap_table_name, conn, schema=LND_SCHEMA, if_exists='fail', index=False)
+            logger.info(f'Wrote the data to the {LND_SCHEMA}.{olap_table_name} OLAP database.')
         except ValueError as e:
-            raise TableExistsError(f"Table '{olap_table_name}' already exists in the OLAP database.")
+            raise TableExistsError(f"Table '{LND_SCHEMA}.{olap_table_name}' already exists in the OLAP database.")
         except Exception as e:
             raise e
 
         conn.commit()
-        logger.info(f'Committed the changes to the {olap_table_name} in OLAP database.')
+        logger.info(f'Committed the changes to the {LND_SCHEMA}.{olap_table_name} in OLAP database.')
     
     except TableExistsError as e:
         logger.warning(e)
         # raise e
 
     except Exception as e:
-        logger.error(f'Error in mapping {oltp_table_name} to {olap_table_name}: {e}')
-        raise MappingError(oltp_table_name, olap_table_name, f'Error in mapping {oltp_table_name} to {olap_table_name}: {e}')
+        logger.error(f'Error in mapping {OLTP_SCHEMA}.{oltp_table_name} to {LND_SCHEMA}.{olap_table_name}: {e}')
+        raise MappingError(oltp_table_name, olap_table_name, f'Error in mapping {OLTP_SCHEMA}.{oltp_table_name} to {LND_SCHEMA}.{olap_table_name}: {e}')
 
 def customerEmployee_Fact_mapper(conn):
     try:
