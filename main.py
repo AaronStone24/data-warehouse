@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from OLTPtoOLAP import load_dimension_tables, load_fact_tables
 from StoredProcedure import execute_merge_proc
 from SQLRunner import run_sql_file
-from Config import logger, CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, DIM_TABLES, FACT_TABLES, MATCHING_CONDITIONS, REFRESH_TABLES, REFRESH_PROCEDURES
+from Config import *
 
 def main():
     # Create a connection to the OLTP database

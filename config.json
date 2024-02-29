@@ -1,19 +1,30 @@
 {
   "database": {
-    "host": "localhost",
-    "port": 5432,
-    "username": "admin",
-    "password": "password",
-    "databaseName": "mydatabase"
+    "driver": "ODBC Driver 17 for SQL Server",
+    "server": "IN3540133W1",
+    "databaseName": "Capstone",
+    "OLTP_SCHEMA": "dbo",
+    "LND_SCHEMA": "DW_Landing",
+    "STG_SCHEMA": "DW_Staging",
+    "DW_SCHEMA": "DW",
+    "dimensionTables": ["Product_Dim", "Supplier_Dim", "Categories_Dim", "Calendar_Dim", "Customer_Dim", "Employee_Dim"],
+    "factTables": ["CustomerEmployee_Fact", "ProductInStock_Fact"],
+    "matchingConditions": {
+      "Product_Dim": "TGT.ProductID=SRC.ProductID",
+      "Supplier_Dim": "TGT.SupplierID=SRC.SupplierID",
+      "Categories_Dim": "TGT.CategoryID=SRC.CategoryID",
+      "Calendar_Dim": "TGT.FullDate=SRC.FullDate",
+      "Customer_Dim": "TGT.CustomerID=SRC.CustomerID",
+      "Employee_Dim": "TGT.EmployeeID=SRC.EmployeeID"
+    },
+    "bridgeTables": []
   },
   "logging": {
-    "level": "info",
-    "file": "logs/app.log"
-  },
-  "api": {
-    "baseUrl": "https://api.example.com",
-    "apiKey": "your-api-key"
+    "name": "DW",
+    "filename": "DW.log"
   },
   
-  "refreshTables": true
+  "refreshTables": true,
+  "refreshProcedures": true
+  
 }
