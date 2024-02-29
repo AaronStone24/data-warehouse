@@ -23,6 +23,8 @@ DROP PROCEDURE IF EXISTS DW_Landing.getColumnNames
 DROP PROCEDURE IF EXISTS DW_Landing.generate_conditions
 DROP PROCEDURE IF EXISTS DW_Landing.AutoSCD1
 
+SELECT '0, Procedures dropped successfully!' AS [Output];
+
 GO
 CREATE PROCEDURE DW_Landing.getColumnNames
 @table varchar(127),
@@ -147,7 +149,8 @@ BEGIN
 	SELECT @result AS the_output;
 END
 
-SELECT 'Procedures created successfully!' AS [Output];
+GO
+SELECT '0, Procedures created successfully!' AS [Output]
 
 /*
 DROP PROCEDURE AutoSCD1;

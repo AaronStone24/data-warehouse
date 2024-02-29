@@ -8,7 +8,8 @@ from sqlalchemy import create_engine
 
 from OLTPtoOLAP import load_dimension_tables, load_fact_tables
 from StoredProcedure import execute_merge_proc
-from Config import logger, CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, DIM_TABLES, FACT_TABLES, MATCHING_CONDITIONS
+from SQLRunner import run_sql_file
+from Config import logger, CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, DIM_TABLES, FACT_TABLES, MATCHING_CONDITIONS, REFRESH_TABLES, REFRESH_PROCEDURES
 
 def main():
     # Create a connection to the OLTP database
@@ -19,6 +20,21 @@ def main():
         # Read the data from the OLTP database by obtaining the connection
         with engine.connect() as conn:
             logger.info('Connected to the OLTP database.')
+
+            #Create the required schemas and its tables
+            if REFRESH_TABLES:
+                logger.info('Creating the required schemas and its tables.')
+                run_sql_file(conn, 'Landing_TableCreation.sql')
+                run_sql_file(conn, 'Staging_TableCreation.sql')
+                run_sql_file(conn, 'DW_TableCreation.sql')
+                logger.info('Finished creating the required schemas and its tables.')
+
+            # Create the required stored procedures
+            if REFRESH_PROCEDURES:
+                logger.info('Creating the required stored procedures.')
+                run_sql_file(conn, 'LandingToStaging_MergeProc.sql')
+                run_sql_file(conn, 'StagingToDW_MergeProc.sql')
+                logger.info('Finished creating the required stored procedures.')
 
             # Mapping the OLTP tables to OLAP tables
             logger.info('Starting mapping of OLTP tables to OLAP Landing tables.')

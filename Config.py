@@ -8,6 +8,8 @@ STG_SCHEMA = 'DW_Staging'
 DW_SCHEMA = 'DW'
 DB_NAME = 'Capstone'
 
+REFRESH_TABLES = True
+REFRESH_PROCEDURES = True
 DIM_TABLES = ['Product_Dim', 'Supplier_Dim', 'Categories_Dim', 'Calendar_Dim', 'Customer_Dim', 'Employee_Dim']
 FACT_TABLES = ['CustomerEmployee_Fact', 'ProductInStock_Fact']
 MATCHING_CONDITIONS = {

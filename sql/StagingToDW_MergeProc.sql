@@ -2,6 +2,8 @@ DROP PROCEDURE IF EXISTS DW_Staging.getColumnNames
 DROP PROCEDURE IF EXISTS DW_Staging.generate_conditions
 DROP PROCEDURE IF EXISTS DW_Staging.AutoSCD2
 
+SELECT '0, Procedures dropped successfully!' AS [Output];
+
 GO
 CREATE PROCEDURE DW_Staging.getColumnNames
 @table varchar(127),
@@ -154,7 +156,8 @@ BEGIN
 	SELECT @result AS the_output;
 END
 
-SELECT 'Procedures created successfully!' AS [Output];
+GO
+SELECT '0, Procedures created successfully!' AS [Output]
 
 -- TODO: Delete the code below later
 /*
