@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 
 from OLTPtoOLAP import load_dimension_tables, load_fact_tables
 from StoredProcedure import execute_merge_proc
-from Constants import logger, CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, DIM_TABLES, FACT_TABLES, MATCHING_CONDITIONS
+from Config import logger, CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, DIM_TABLES, FACT_TABLES, MATCHING_CONDITIONS
 
 def main():
     # Create a connection to the OLTP database
@@ -21,7 +21,7 @@ def main():
             logger.info('Connected to the OLTP database.')
 
             # Mapping the OLTP tables to OLAP tables
-            logger.info('Starting mapping of OLTP tables to OLAP tables.')
+            logger.info('Starting mapping of OLTP tables to OLAP Landing tables.')
 
             # Load the dimension tables
             load_dimension_tables(conn)
@@ -30,17 +30,28 @@ def main():
             # Load the fact tables
             # load_fact_tables(conn)
 
-            logger.info('Finished mapping of OLTP tables to OLAP tables.')
+            logger.info('Finished mapping of OLTP tables to OLAP Landing tables.')
             logger.info('-' * 100)
 
-            # Execute the stored procedure to merge the data from Landing to Staging for each dimension table
-            logger.info('Executing the stored procedure to merge the data from Landing to Staging for each dimension table.')
+            # Execute the AutoSCD1 stored procedure to merge the data from Landing to Staging for each dimension table
+            logger.info('Executing the AutoSCD1 stored procedure to merge the data from Landing to Staging for each dimension table.')
             for dt in DIM_TABLES:
                 execute_merge_proc(
                     conn,
-                    'AutoSCD1',
+                    f'{LND_SCHEMA}.AutoSCD1',
                     f'{LND_SCHEMA}.{dt}',
                     f'{STG_SCHEMA}.{dt}',
+                    MATCHING_CONDITIONS[dt]
+                )
+
+            # Execute the AutoSCD2 stored procedure to merge the data from Staging to Data Warehouse for each dimension table
+            logger.info('Executing the AutoSCD2 stored procedure to merge the data from Staging to Data Warehouse for each dimension table.')
+            for dt in DIM_TABLES:
+                execute_merge_proc(
+                    conn,
+                    f'{STG_SCHEMA}.AutoSCD2',
+                    f'{STG_SCHEMA}.{dt}',
+                    f'{DW_SCHEMA}.{dt}',
                     MATCHING_CONDITIONS[dt]
                 )
 

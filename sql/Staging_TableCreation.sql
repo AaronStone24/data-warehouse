@@ -1,5 +1,19 @@
---drop database dw_landing
---create schema DW_Staging
+IF NOT EXISTS (SELECT TOP 1 * FROM sys.schemas WHERE name = 'DW_Staging')
+BEGIN
+	EXEC('CREATE SCHEMA DW_Staging')
+END
+ELSE
+BEGIN
+--Todo: REMOVE FACT TABLES FROM HERE AND ADD BRIDGE TABLES
+    DROP TABLE IF EXISTS DW_Staging.CustomerEmployee_Fact
+    DROP TABLE IF EXISTS DW_Staging.ProductInStock_Fact
+    DROP TABLE IF EXISTS DW_Staging.Categories_Dim
+    DROP TABLE IF EXISTS DW_Staging.Product_Dim
+    DROP TABLE IF EXISTS DW_Staging.Supplier_Dim
+    DROP TABLE IF EXISTS DW_Staging.Calendar_Dim
+    DROP TABLE IF EXISTS DW_Staging.Customer_Dim
+    DROP TABLE IF EXISTS DW_Staging.Employee_Dim
+END
  
 create table DW_Staging.Categories_Dim(
 CategoriesKey int Primary Key identity,
@@ -8,12 +22,7 @@ CategoryName varchar(50),
 CatDescription ntext,
 loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
 SourceTable varchar(max)
-)--done
-INSERT INTO DW_Staging.Categories_Dim (CategoryID, CategoryName, CatDescription, SourceTable)
-VALUES (123, 'Toys', 'Optimus Prime Toy', 'dbo.Categories')
-drop table DW_Staging.Categories_Dim
-
-SELECT COLUMNPROPERTY(OBJECT_ID('DW_Landing.Categories_Dim'), 'CategoriesKey', 'IsIdentity')
+)
  
 create table DW_Staging.Product_Dim(
 ProductKey int Primary Key identity,
@@ -23,7 +32,7 @@ UnitPrice int ,
 Discontinued int,
 loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
 SourceTable varchar(max)
-)--done
+)
  
 create table DW_Staging.Supplier_Dim(
 SupplierKey int primary key identity,
@@ -39,7 +48,7 @@ Country varchar(50),
 Phone varchar(50),
 loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
 SourceTable varchar(max)
-)--done
+)
  
 create table DW_Staging.Calendar_Dim(
 CalendarKey int primary key identity,
@@ -52,8 +61,7 @@ DayofTheMonth int,
 [Year] int,
 loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
 SourceTable varchar(max)
-);--done
---drop table DW_Staging.Calendar_Dim
+);
  
 create table DW_Staging.Customer_Dim(
 CustomerKey int primary key identity,
@@ -69,8 +77,7 @@ Country varchar(20),
 Phone varchar(20),
 loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
 SourceTable varchar(max)
-);--done
---drop table Customer_Dim
+);
  
 create table DW_Staging.Employee_Dim(
 EmployeeKey int primary key identity,
@@ -83,8 +90,7 @@ Region varchar(15),
 Country varchar(15),
 loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
 SourceTable varchar(max)
-);--done
---drop table Employee_Dim
+);
  
 create table DW_Staging.CustomerEmployee_Fact(
 CustomerKey int foreign key references DW_Staging.Customer_Dim(customerkey),
@@ -94,8 +100,7 @@ OrderId varchar(max),
 Sales money,
 loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
 SourceTable varchar(max)
-);--done
---drop table DW_Staging.CustomerEmployee_Fact
+);
  
 create table DW_Staging.ProductInStock_Fact(
 Calendarkey int foreign key references DW_Staging.Calendar_Dim(CalendarKey),
@@ -110,5 +115,3 @@ OrderId varchar(20),
 loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
 SourceTable varchar(max)
 )
---drop table DW_Staging.ProductInStock_Fact
---waiting for other tables

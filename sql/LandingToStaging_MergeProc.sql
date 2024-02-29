@@ -18,7 +18,12 @@
 */
 
 ------------------------------------------------------------------------------------------
-CREATE PROCEDURE getColumnNames
+DROP PROCEDURE IF EXISTS DW_Landing.getColumnNames
+DROP PROCEDURE IF EXISTS DW_Landing.generate_conditions
+DROP PROCEDURE IF EXISTS DW_Landing.AutoSCD1
+
+GO
+CREATE PROCEDURE DW_Landing.getColumnNames
 @table varchar(127),
 @seperator varchar(10),
 @prefix varchar(50) = '',
@@ -57,7 +62,8 @@ END
 
 -------------------------------------------------------------------------------------------
 
-CREATE PROCEDURE generate_conditions
+GO
+CREATE PROCEDURE DW_Landing.generate_conditions
 @table varchar(127),
 @operator varchar(5),
 @seperator varchar(10),
@@ -99,7 +105,8 @@ END
 
 ----------------------------------------------------------------------------------------------
 
-CREATE PROCEDURE AutoSCD1
+GO
+CREATE PROCEDURE DW_Landing.AutoSCD1
 @SourceTable varchar(127),
 @TargetTable varchar(127),
 @matching_condition varchar(127)
@@ -110,10 +117,10 @@ BEGIN
 		DECLARE @query varchar(max), @cond1 varchar(max), @query2 varchar(max), @columns varchar(max),
 		@src_columns varchar(max)
 
-		EXEC generate_conditions @table=@SourceTable, @operator='!=', @seperator='OR ', @isSetQuery = 0, @condition=@cond1 OUTPUT
-		EXEC generate_conditions @table=@SourceTable, @operator='=', @seperator=' , ', @condition=@query2 OUTPUT
-		EXEC getColumnNames @table=@SourceTable, @seperator=' , ', @out=@columns OUTPUT
-		EXEC getColumnNames @table=@SourceTable, @seperator=' , ', @prefix='SRC.', @out=@src_columns OUTPUT
+		EXEC DW_Landing.generate_conditions @table=@SourceTable, @operator='!=', @seperator='OR ', @isSetQuery = 0, @condition=@cond1 OUTPUT
+		EXEC DW_Landing.generate_conditions @table=@SourceTable, @operator='=', @seperator=' , ', @condition=@query2 OUTPUT
+		EXEC DW_Landing.getColumnNames @table=@SourceTable, @seperator=' , ', @out=@columns OUTPUT
+		EXEC DW_Landing.getColumnNames @table=@SourceTable, @seperator=' , ', @prefix='SRC.', @out=@src_columns OUTPUT
 
 		SET @query = 'MERGE ' + @TargetTable + ' AS TGT' + CHAR(13) + 
 			'USING ' + @SourceTable + ' AS SRC' + CHAR(13) + 
@@ -127,12 +134,10 @@ BEGIN
 			'THEN INSERT ' + '(' + @columns + ', SourceTable)' + CHAR(13) +
 			'VALUES (' + @src_columns + ', ' + '''' + @SourceTable + '''' + ');'
 	
-		--PRINT @query
-
 		EXEC(@query)
 		
 		DECLARE @result varchar(max) = ''
-		SET @result = '0, ' + CAST(@@ROWCOUNT AS varchar(10))+' rows affected, Procedure AutoSCD1 executed successfully!'
+		SET @result = '0, Procedure AutoSCD1 executed successfully!'
 	END TRY
 
 	BEGIN CATCH
@@ -140,6 +145,7 @@ BEGIN
 	END CATCH
 	SELECT @result AS the_output;
 END
+
 /*
 DROP PROCEDURE AutoSCD1;
 EXEC AutoSCD1 @SourceTable='DW_Landing.Categories_Dim', @TargetTable='DW_Staging.Categories_Dim', @matching_condition='TGT.CategoriesKey=SRC.CategoriesKey'

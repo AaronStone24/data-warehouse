@@ -1,6 +1,9 @@
----------------------------------------------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS DW_Staging.getColumnNames
+DROP PROCEDURE IF EXISTS DW_Staging.generate_conditions
+DROP PROCEDURE IF EXISTS DW_Staging.AutoSCD2
 
-CREATE PROCEDURE getColumnNames
+GO
+CREATE PROCEDURE DW_Staging.getColumnNames
 @table varchar(127),
 @seperator varchar(10),
 @prefix varchar(50) = '',
@@ -40,14 +43,17 @@ BEGIN
 	DEALLOCATE cs;
 END
 
+/*
 DROP PROCEDURE getColumnNames;
 DECLARE @out VARCHAR(MAX)
 EXEC getColumnNames @table='DW.Categories_Dim', @seperator=' , ', @includeSourceTableColumn = 1, @out=@out OUTPUT
 SELECT @out
+*/
 
 ---------------------------------------------------------------------------------------------------------------
 
-CREATE PROCEDURE generate_conditions
+GO
+CREATE PROCEDURE DW_Staging.generate_conditions
 @table varchar(127),
 @operator varchar(5),
 @seperator varchar(10),
@@ -66,7 +72,6 @@ BEGIN
 	OPEN cs;
 
 	DECLARE @columnName varchar(50) = '', @dataType nvarchar(50) = ''
-	--SET @condition = '('
 
 	FETCH NEXT FROM cs INTO @columnName, @dataType
 	WHILE @@FETCH_STATUS = 0
@@ -82,21 +87,22 @@ BEGIN
 	END
 
 	SET @condition = SUBSTRING(@condition, 1, LEN(@condition)-LEN(@seperator))
-	--SET @condition = CONCAT(@condition, ')')
-	--PRINT @condition
 
 	CLOSE cs;
 	DEALLOCATE cs;
 END
 
+/*
 DROP PROCEDURE generate_conditions;
 DECLARE @condition varchar(max)
 EXEC generate_conditions @table='DW.Categories_Dim', @operator='!=', @seperator=' OR ', @condition=@condition OUTPUT
 SELECT @condition;
+*/
 
 ---------------------------------------------------------------------------------------------------------------
 
-CREATE PROCEDURE AutoSCD2
+GO
+CREATE PROCEDURE DW_Staging.AutoSCD2
 @SourceTable varchar(127),
 @TargetTable varchar(127),
 @matching_condition varchar(127)
@@ -108,12 +114,12 @@ BEGIN
 		@tgt_table_columns_wsc varchar(max), @src_table_prefix_columns varchar(max), @src_table_prefix_columns_wsc varchar(max),
 		@tgt_table_columns varchar(max)
 
-		EXEC generate_conditions @table=@SourceTable, @operator='!=', @seperator='OR ', @condition=@check_cond OUTPUT
-		EXEC getColumnNames @table=@SourceTable, @seperator=' , ', @out=@src_table_columns OUTPUT
-		EXEC getColumnNames @table=@TargetTable, @seperator=' , ', @out=@tgt_table_columns OUTPUT
-		EXEC getColumnNames @table=@TargetTable, @seperator=' , ', @includeSourceTableColumn = 1, @out=@tgt_table_columns_wsc OUTPUT
-		EXEC getColumnNames @table=@SourceTable, @seperator=' , ', @prefix='SRC.', @out=@src_table_prefix_columns OUTPUT
-		EXEC getColumnNames @table=@SourceTable, @seperator=' , ', @prefix='SRC.', @includeSourceTableColumn = 1, @out=@src_table_prefix_columns_wsc OUTPUT
+		EXEC DW_Staging.generate_conditions @table=@SourceTable, @operator='!=', @seperator='OR ', @condition=@check_cond OUTPUT
+		EXEC DW_Staging.getColumnNames @table=@SourceTable, @seperator=' , ', @out=@src_table_columns OUTPUT
+		EXEC DW_Staging.getColumnNames @table=@TargetTable, @seperator=' , ', @out=@tgt_table_columns OUTPUT
+		EXEC DW_Staging.getColumnNames @table=@TargetTable, @seperator=' , ', @includeSourceTableColumn = 1, @out=@tgt_table_columns_wsc OUTPUT
+		EXEC DW_Staging.getColumnNames @table=@SourceTable, @seperator=' , ', @prefix='SRC.', @out=@src_table_prefix_columns OUTPUT
+		EXEC DW_Staging.getColumnNames @table=@SourceTable, @seperator=' , ', @prefix='SRC.', @includeSourceTableColumn = 1, @out=@src_table_prefix_columns_wsc OUTPUT
 
 		SET @query = 'INSERT INTO ' + @TargetTable + ' (' + @tgt_table_columns_wsc + ')' + CHAR(13) +
 			'SELECT ' + @tgt_table_columns + ', ' + '''' + @SourceTable + '''' + CHAR(13) +
@@ -148,6 +154,8 @@ BEGIN
 	SELECT @result AS the_output;
 END
 
+-- TODO: Delete the code below later
+/*
 INSERT INTO DW.Customer_Dim(customerID ,CompanyName ,ContactName ,ContactTitle ,CustAddress, City, Region, PostalCode, Country, Phone, SourceTable)
 SELECT customerID,CompanyName ,ContactName ,ContactTitle ,CustAddress ,City,Region ,PostalCode ,Country ,Phone , 'DW_Staging.CuStomer_Dim'
 FROM
@@ -228,3 +236,4 @@ TRUNCATE TABLE DW_Staging.Categories_Dim
 TRUNCATE TABLE DW_Staging.Employee_Dim
 TRUNCATE TABLE DW_Staging.Customer_Dim
 TRUNCATE TABLE DW_Staging.Supplier_Dim
+*/

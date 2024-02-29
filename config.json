@@ -1,0 +1,19 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "username": "admin",
+    "password": "password",
+    "databaseName": "mydatabase"
+  },
+  "logging": {
+    "level": "info",
+    "file": "logs/app.log"
+  },
+  "api": {
+    "baseUrl": "https://api.example.com",
+    "apiKey": "your-api-key"
+  },
+  
+  "refreshTables": true
+}
