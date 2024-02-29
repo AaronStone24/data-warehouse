@@ -19,6 +19,10 @@ def main():
     try:
         # Read the data from the OLTP database by obtaining the connection
         with engine.connect() as conn:
+            # Set the autocommit to True
+            if conn.connection.dbapi_connection is not None:
+                conn.connection.dbapi_connection.autocommit = True
+
             logger.info('Connected to the OLTP database.')
 
             #Create the required schemas and its tables
@@ -44,7 +48,7 @@ def main():
 
             # TODO: Load the bridge tables instead of fact tables
             # Load the fact tables
-            # load_fact_tables(conn)
+            load_fact_tables(conn)
 
             logger.info('Finished mapping of OLTP tables to OLAP Landing tables.')
             logger.info('-' * 100)

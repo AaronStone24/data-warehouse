@@ -12,7 +12,8 @@ def execute_merge_proc(conn: sqlalchemy.Connection, merge_proc_name, source_tabl
         params = (source_table, target_table, matching_condition)
         run_sql_code(conn, sql, params)
         logger.info(f'Successfully executed the stored procedure to merge the data from {source_table} to {target_table}.')
-        conn.commit()
+        # conn.commit()
+    
     except SqlError as e:
         return_code = e.return_code
         return_msg = e.message

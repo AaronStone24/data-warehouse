@@ -164,4 +164,13 @@ SET CategoryName = 'New Toys'
 WHERE CategoriesKey = 2
 
 SELECT * FROM DW_Staging.Categories_Dim
+
+SELECT * FROM DW_Landing.Product_Dim
+SELECT * FROM DW_Staging.Product_Dim
+
+UPDATE DW_Landing.Product_Dim
+SET UnitPrice = 20
+WHERE ProductID = 1
+
+EXEC DW_Landing.AutoSCD1 @SourceTable='DW_Landing.Product_Dim', @TargetTable='DW_Staging.Product_Dim', @matching_condition='TGT.ProductID=SRC.ProductID'
 */

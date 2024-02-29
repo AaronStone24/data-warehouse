@@ -147,7 +147,7 @@ BEGIN
 
 		EXEC(@query)
 		
-		SET @result = '0, Procedure AutoSCD1 executed successfully!'
+		SET @result = '0, Procedure AutoSCD2 executed successfully!'
 	END TRY
 
 	BEGIN CATCH
@@ -162,7 +162,7 @@ SELECT '0, Procedures created successfully!' AS [Output]
 -- TODO: Delete the code below later
 /*
 INSERT INTO DW.Customer_Dim(customerID ,CompanyName ,ContactName ,ContactTitle ,CustAddress, City, Region, PostalCode, Country, Phone, SourceTable)
-SELECT customerID,CompanyName ,ContactName ,ContactTitle ,CustAddress ,City,Region ,PostalCode ,Country ,Phone , 'DW_Staging.CuStomer_Dim'
+SELECT customerID,CompanyName ,ContactName ,ContactTitle ,CustAddress ,City,Region ,PostalCode ,Country ,Phone , 'DW_Staging.Customer_Dim'
 FROM
 (
 	MERGE DW.Customer_Dim AS TGT
@@ -209,8 +209,8 @@ SELECT * FROM DW.Customer_Dim
 WHERE CustomerID = 'ALFKI'
 TRUNCATE TABLE DW.Customer_Dim
 
-EXEC AutoSCD2 @SourceTable='DW_Staging.Customer_Dim', @TargetTable='DW.Customer_Dim', @matching_condition='TGT.CustomerID=SRC.CustomerID'
-DROP PROCEDURE AutoSCD2
+EXEC DW_Staging.AutoSCD2 @SourceTable='DW_Staging.Customer_Dim', @TargetTable='DW.Customer_Dim', @matching_condition='TGT.CustomerID=SRC.CustomerID'
+DROP PROCEDURE DW_Staging.AutoSCD2
 
 UPDATE DW_Staging.Customer_Dim
 SET Country = 'Deutschland/Germany'
@@ -222,7 +222,7 @@ SELECT * FROM DW.Product_Dim
 WHERE ProductID = 1
 TRUNCATE TABLE DW.Product_Dim
 
-EXEC AutoSCD2 @SourceTable='DW_Staging.Product_Dim', @TargetTable='DW.Product_Dim', @matching_condition='TGT.ProductID=SRC.ProductID'
+EXEC DW_Staging.AutoSCD2 @SourceTable='DW_Staging.Product_Dim', @TargetTable='DW.Product_Dim', @matching_condition='TGT.ProductID=SRC.ProductID'
 
 UPDATE DW_Staging.Product_Dim
 SET UnitPrice = 20
