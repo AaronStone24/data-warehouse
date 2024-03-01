@@ -9,6 +9,7 @@ from sqlalchemy import create_engine
 from OLTPtoOLAP import load_dimension_tables, create_fact_tables, load_bridge_tables
 from StoredProcedure import execute_merge_proc
 from SQLRunner import run_sql_file
+from Truncater import truncate_table
 from Config import *
 
 def main():
@@ -33,6 +34,12 @@ def main():
                 run_sql_file(conn, 'DW_TableCreation.sql')
                 logger.info('Finished creating the required schemas and its tables.')
 
+            #Create the required fact tables
+            if REFRESH_FACT_TABLES:
+                logger.info('Creating the required fact tables.')
+                run_sql_file(conn, 'DW_FactTableCreation.sql')
+                logger.info('Finished creating the required fact tables.')
+
             # Create the required stored procedures
             if REFRESH_PROCEDURES:
                 logger.info('Creating the required stored procedures.')
@@ -50,7 +57,6 @@ def main():
             logger.info(f'Finished mapping of OLTP tables to Dimension tables of {LND_SCHEMA}.')
             logger.info('-' * 200)
 
-            # TODO: Load the bridge tables instead of fact tables
             # Load the bridge tables
             load_bridge_tables(conn)
             logger.info(f'Finished mapping of OLTP tables to Bridge tables of {LND_SCHEMA}.')
@@ -84,7 +90,13 @@ def main():
 
             # Create the fact tables
             create_fact_tables(conn)
+            logger.info('Finished creating the fact tables in the Data Warehouse Layer.')
+            logger.info('-' * 200)
 
+            # Truncate the dimension tables in the Landing layer
+            logger.info('Truncating the dimension table and bridging tables in the Landing layer.')
+            for dt in DIM_TABLES + BRIDGE_TABLES:
+                truncate_table(conn, f'{LND_SCHEMA}.{dt}')
 
     except Exception as e:
         logger.error(f'Error in the main function: {e.__class__.__name__}: {e}')

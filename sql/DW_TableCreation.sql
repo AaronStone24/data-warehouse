@@ -99,7 +99,7 @@ BEGIN TRY
     endTimeDate DATETIME DEFAULT NULL,
     SourceTable varchar(max)
     );
-   
+    /*
     create table DW.CustomerEmployee_Fact(
     CustomerKey int foreign key references DW.Customer_Dim(customerkey),
     EmployeeKey int foreign key references DW.Employee_Dim(Employeekey),
@@ -122,7 +122,8 @@ BEGIN TRY
     OrderId varchar(20),
     loadTimeDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     SourceTable varchar(max)
-    )
+    );
+    */
 
     SET @result = '0, DW tables created successfully!'
 END TRY

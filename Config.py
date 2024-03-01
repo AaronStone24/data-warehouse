@@ -10,6 +10,7 @@ DW_SCHEMA = 'DW'
 DB_NAME = 'Capstone'
 
 REFRESH_TABLES = True
+REFRESH_FACT_TABLES = True
 REFRESH_PROCEDURES = True
 DIM_TABLES = ['Product_Dim', 'Supplier_Dim', 'Categories_Dim', 'Calendar_Dim', 'Customer_Dim', 'Employee_Dim']
 FACT_TABLES = ['CustomerEmployee_Fact', 'ProductInStock_Fact']
@@ -51,7 +52,7 @@ try:
 
         logging.basicConfig(filename=config['logging']['filename'],
             filemode='w' if config['logging']['overwrite'] else 'a',
-            format='[%(filename)s:%(lineno)s - %(funcName)30s()] - %(levelname)s - %(asctime)s - %(message)s', 
+            format='[%(filename)20s:%(lineno)2s] - %(funcName)25s() - %(levelname)s - %(asctime)s - %(message)s', 
             level=logging.DEBUG,
             datefmt='%d-%m-%Y %H:%M:%S'
         )
@@ -59,4 +60,3 @@ try:
 except Exception as e:
     print(f'Error in parsing the config file: {e}')
     print(f'Using the default values for the config parameters.')
-    

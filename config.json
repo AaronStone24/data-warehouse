@@ -28,6 +28,6 @@
   },
   
   "refreshTables": true,
+  "refreshFactTables": true,
   "refreshProcedures": true
-  
 }
