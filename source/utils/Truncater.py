@@ -1,5 +1,5 @@
-from utils.SQLRunner import run_sql_code
-from Config import logger
+from source.SQLRunner import run_sql_code
+from source.Config import logger
 
 def truncate_table(conn, tableName):
     try:

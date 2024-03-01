@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine
 
-from Config import CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, logger
-from Mapper import *
-from utils.Exceptions import MappingError
+from .Config import CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, logger
+from .Mapper import *
+from .utils.Exceptions import MappingError
 
 # TODO: Consider using SqlAlchemy's ORM based Tables 
 

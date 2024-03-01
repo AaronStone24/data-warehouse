@@ -1,8 +1,8 @@
 import os
 import sqlalchemy
 
-from Config import logger
-from utils.Exceptions import SqlError
+from .Config import logger
+from .utils.Exceptions import SqlError
 
 def run_sql_file(conn: sqlalchemy.Connection, file_name: str):
     cursor = None
