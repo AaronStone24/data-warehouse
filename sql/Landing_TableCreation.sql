@@ -7,7 +7,6 @@ BEGIN TRY
     END
     ELSE
     BEGIN
-    --Todo: REMOVE FACT TABLES FROM HERE AND ADD BRIDGE TABLES
         DROP TABLE IF EXISTS DW_Landing.CustomerEmployee_Bridge
         DROP TABLE IF EXISTS DW_Landing.ProductInStock_Bridge
         DROP TABLE IF EXISTS DW_Landing.Categories_Dim

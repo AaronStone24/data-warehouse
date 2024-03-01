@@ -2,9 +2,8 @@ from sqlalchemy import create_engine
 
 from Config import CONNECTION_URL, OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, logger
 from Mapper import *
-from Exceptions import MappingError
+from utils.Exceptions import MappingError
 
-# TODO: Consider using a configuration file for the connection strings
 # TODO: Consider using SqlAlchemy's ORM based Tables 
 
 def load_dimension_tables(conn):

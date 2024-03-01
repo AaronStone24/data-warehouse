@@ -8,8 +8,8 @@ from sqlalchemy import create_engine
 
 from OLTPtoOLAP import load_dimension_tables, create_fact_tables, load_bridge_tables
 from StoredProcedure import execute_merge_proc
-from SQLRunner import run_sql_file
-from Truncater import truncate_table
+from utils.SQLRunner import run_sql_file
+from utils.Truncater import truncate_table
 from Config import *
 
 def main():
