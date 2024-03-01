@@ -4,11 +4,11 @@
 # calling the merge from the Staging to the Data Warehouse (SCD 2)
 # Truncate the necessary tables
 
-from .OLTPtoOLAP import load_dimension_tables, create_fact_tables, load_bridge_tables
-from .StoredProcedure import execute_merge_proc
-from .SQLRunner import run_sql_file
-from .utils.Truncater import truncate_table
-from .Config import *
+from OLTPtoOLAP import load_dimension_tables, create_fact_tables, load_bridge_tables
+from StoredProcedure import execute_merge_proc
+from SQLRunner import run_sql_file
+from utils.Truncater import truncate_table
+from Config import *
 
 from sqlalchemy import create_engine
 

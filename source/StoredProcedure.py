@@ -1,8 +1,8 @@
 import sqlalchemy
 
-from .Config import logger
-from .utils.Exceptions import MergeError, TableDoesNotExistError, SqlError
-from .SQLRunner import run_sql_code
+from Config import logger
+from utils.Exceptions import MergeError, TableDoesNotExistError, SqlError
+from SQLRunner import run_sql_code
 
 def execute_merge_proc(conn: sqlalchemy.Connection, merge_proc_name, source_table, target_table, matching_condition):
     logger.info(f'Executing the stored procedure to merge the data from {source_table} to {target_table}.')

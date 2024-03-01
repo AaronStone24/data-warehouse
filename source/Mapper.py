@@ -1,5 +1,5 @@
-from .Config import OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, logger
-from .utils.Exceptions import TableExistsError, MappingError
+from Config import OLTP_SCHEMA, LND_SCHEMA, STG_SCHEMA, DW_SCHEMA, logger
+from utils.Exceptions import TableExistsError, MappingError
 
 import pandas as pd
 import numpy as np
